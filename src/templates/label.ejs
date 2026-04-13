@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Product Labels</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      width: 4in;
+      height: 2in;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      width: 60px;
+      height: auto;
+    }
+    .company-info {
+      text-align: right;
+      font-size: 8px;
+    }
+    .main-product-info {
+      text-align: left;
+      margin-top: 10px;
+    }
+    .main-product-info h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .main-product-info span {
+      font-size: 11px;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+    .footer-left p {
+      margin: 2px 0;
+      font-size: 10px;
+    }
+    .qr-code-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .qr-code {
+      width: 40px;
+      height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="company-info">
+        <img src="<%= logoBase64 %>" alt="Vashishat Labs Logo" class="logo">
+        <br>
+        <span>www.vashishatlabs.com</span>
+      </div>
+    </div>
+  
+    <div class="main-product-info">
+      <h3><%= product.name %></h3>
+      <span>Range <%= product.name.includes('5 Volt') ? '5 Volt 500mA' : (product.name.includes('12 Volt') ? '12 Volt 500mA' : '') %></span>
+    </div>
+  
+    <div class="footer">
+      <div class="footer-left">
+        <p>Cat. # <%= product.catalogueNumber %></p>
+        <p>Qty. <%= quantity %> Nos</p>
+        <p>Date: <%= date %></p>
+      </div>
+      <div class="qr-code-container">
+        <img src="<%= qrCodeBase64 %>" alt="QR Code" class="qr-code">
+      </div>
+    </div>
+  </div>
+</body>
+</html>

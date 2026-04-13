@@ -1,0 +1,23 @@
+<div class="label-container">
+  <div class="header">
+    <img src="<%= logoBase64 %>" alt="Vashishat Labs Logo" class="logo">
+    <span class="logo-text">www.vashishatlabs.com</span>
+  </div>
+
+  <div class="main-info">
+    <h3><%= product.name %></h3>
+    <% if (brand) { %>
+      <p style="font-size: 12px; margin-top: 5px;"><%= brand %></p>
+    <% } %>
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">
+      <span>Cat. #</span>
+      <span><%= product.catalogueNumber %></span>
+      <span>Qty.</span>
+      <span><%= quantity %> Nos</span>
+    </div>
+    <img src="<%= qrCodeBase64 %>" alt="QR Code" class="qr-code">
+  </div>
+</div>
