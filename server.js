@@ -20,6 +20,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+// Health check route
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
 // All API routes come after the static file and root route handlers
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/products', require('./src/routes/products'));
