@@ -1,8 +1,8 @@
-const puppeteer = require('puppeteer');
 const path = require('path');
 const ejs = require('ejs');
 const fs = require('fs').promises;
 const qrcode = require('qrcode');
+const htmlPdf = require('html-pdf-node');
 const History = require('../models/History');
 const Product = require('../models/Product');
 
@@ -79,20 +79,13 @@ exports.generatePdf = async (req, res) => {
       { labels }
     );
 
-    // 6. launch Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-
-    // 7. generate PDF
-    const pdfBuffer = await page.pdf({
+    // 6. generate PDF using html-pdf-node
+    const options = {
       format: 'A4',
-      printBackground: true
-    });
-    await browser.close();
+      printBackground: true,
+      margin: { top: 10, bottom: 10, left: 10, right: 10 }
+    };
+    const pdfBuffer = await htmlPdf.generatePdf({ content: html }, options);
 
     // 8. send back PDF
     res.setHeader('Content-Type', 'application/pdf');
@@ -100,7 +93,11 @@ exports.generatePdf = async (req, res) => {
     res.send(pdfBuffer);
 
   } catch (err) {
-    console.error('Error generating PDF:', err);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Error generating PDF:', err.message);
+    console.error('Stack:', err.stack);
+    res.status(500).json({ 
+      message: 'Failed to generate PDF',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
