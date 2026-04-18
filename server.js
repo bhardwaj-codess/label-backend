@@ -13,11 +13,16 @@ app.use(cors());
 app.use(express.json());
 
 // Serve the static frontend files first
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, '../label-generator/dist')));
 
 // Define a specific route for the main login page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    const indexPath = path.join(__dirname, '../label-generator/dist/index.html');
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            res.status(404).send("Frontend not built. Please run 'npm run build' in label-generator.");
+        }
+    });
 });
 
 // Health check route
