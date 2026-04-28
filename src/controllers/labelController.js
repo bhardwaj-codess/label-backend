@@ -11,7 +11,18 @@ const Product = require('../models/Product');
 // 1.  destruct NEW body shape
 exports.generatePdf = async (req, res) => {
   try {
-    const { lines, customerName, customerEmail, customerPhone, customerAddress, skipHistory } = req.body;
+    const { 
+      lines, 
+      customerName, 
+      customerPhone, 
+      customerAddress,
+      clientCode,
+      workOrderDateFrom,
+      workOrderDateTo,
+      workOrderNo,
+      woReceiveDate,
+      skipHistory 
+    } = req.body;
     if (!Array.isArray(lines) || !lines.length) {
       return res.status(400).json({ message: 'Lines array required.' });
     }
@@ -62,9 +73,13 @@ exports.generatePdf = async (req, res) => {
       const savedHistory = await History.create({
         user: req.user.id,
         customerName: customerName || '',
-        customerEmail: customerEmail || '',
         customerPhone: customerPhone || '',
         customerAddress: customerAddress || '',
+        clientCode: clientCode || '',
+        workOrderDateFrom: workOrderDateFrom || '',
+        workOrderDateTo: workOrderDateTo || '',
+        workOrderNo: workOrderNo || '',
+        woReceiveDate: woReceiveDate || '',
         lines: historyLines,
         status: 'completed'
       });

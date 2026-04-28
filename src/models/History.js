@@ -8,9 +8,13 @@ const historySchema = new Schema({
     required: true
   },
   customerName: String,
-  customerEmail: String,
   customerPhone: String,
   customerAddress: String,
+  clientCode: String,
+  workOrderDateFrom: String,
+  workOrderDateTo: String,
+  workOrderNo: String,
+  woReceiveDate: String,
   lines: [{
     productId: {
       type: Schema.Types.ObjectId,
