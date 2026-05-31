@@ -2,14 +2,30 @@ const path = require('path');
 const ejs = require('ejs');
 const fs = require('fs').promises;
 const qrcode = require('qrcode');
-const htmlPdf = require('html-pdf-node');
 const History = require('../models/History');
 const Product = require('../models/Product');
+const { generatePdfFromHtml } = require('../services/pdfGenerator');
 
+// Memory caches for static asset base64 strings to eliminate disk I/O from request lifecycle
+let logoBase64Cache = null;
+let qrCodeBase64Cache = null;
 
+async function getCachedImages() {
+  if (!logoBase64Cache) {
+    const logoPath = path.join(__dirname, '../images/vashishat_logo.png');
+    const logoBuffer = await fs.readFile(logoPath);
+    logoBase64Cache = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+  }
+  if (!qrCodeBase64Cache) {
+    const qrPath = path.join(__dirname, '../images/QR.png');
+    const qrBuffer = await fs.readFile(qrPath);
+    qrCodeBase64Cache = `data:image/png;base64,${qrBuffer.toString('base64')}`;
+  }
+  return { logoBase64: logoBase64Cache, qrCodeBase64: qrCodeBase64Cache };
+}
 
-// 1.  destruct NEW body shape
 exports.generatePdf = async (req, res) => {
+  const startTime = Date.now();
   try {
     const { 
       lines, 
@@ -27,18 +43,15 @@ exports.generatePdf = async (req, res) => {
       return res.status(400).json({ message: 'Lines array required.' });
     }
 
-    // 1. fetch products
+    // 1. Fetch products
     const prodIds = lines.map(l => l.productId);
     const prods = await Product.find({ _id: { $in: prodIds } }).lean();
     const prodMap = prods.reduce((m, p) => (m[p._id.toString()] = p, m), {});
 
-    // 2. images (base64)
-    const logoBase64 = `data:image/png;base64,${(await fs.readFile(path.join(__dirname, '../images/vashishat_logo.png'))).toString('base64')
-      }`;
-    const qrCodeBase64 = `data:image/png;base64,${(await fs.readFile(path.join(__dirname, '../images/QR.png'))).toString('base64')
-      }`;
+    // 2. Images (base64) - load from fast memory cache instead of disk
+    const { logoBase64, qrCodeBase64 } = await getCachedImages();
 
-
+    // 3. Assemble labels
     const labels = [];
     for (const { productId, totalQuantity, numLabels, brand } of lines) {
       const product = prodMap[productId];
@@ -54,7 +67,7 @@ exports.generatePdf = async (req, res) => {
       }
     }
 
-    // for saving history
+    // Assemble history lines
     const historyLines = lines.map(line => {
       const product = prodMap[line.productId];
       return {
@@ -88,21 +101,23 @@ exports.generatePdf = async (req, res) => {
       console.log('Skipping history creation (Preview mode)');
     }
 
-    // 5. render EJS -> HTML
+    // 5. Render EJS -> HTML
     const html = await ejs.renderFile(
       path.join(__dirname, '../templates/multipleLabels.ejs'),
       { labels }
     );
 
-    // 6. generate PDF using html-pdf-node
+    // 6. Generate PDF using our high-speed cached puppeteer service
     const options = {
       format: 'A4',
       printBackground: true,
-      margin: { top: 10, bottom: 10, left: 10, right: 10 }
+      margin: { top: '10px', bottom: '10px', left: '10px', right: '10px' }
     };
-    const pdfBuffer = await htmlPdf.generatePdf({ content: html }, options);
+    const pdfBuffer = await generatePdfFromHtml(html, options);
 
-    // 8. send back PDF
+    console.log(`[generatePdf] Request completed in ${Date.now() - startTime}ms.`);
+
+    // 8. Send back PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename=labels.pdf');
     res.send(pdfBuffer);
